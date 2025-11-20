@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>첫사랑과 첫눈의 계절</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #b4c8d2;
+        }
+        #p5-container {
+            /* 캔버스가 들어갈 컨테이너 */
+            /* 화면 확장을 위해 크기 증가 (예: 800px x 600px) */
+            width: 800px;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div id="p5-container"></div>
+    <script>
+        // Instance Mode를 위한 스케치 함수 정의
+        const sketch = (p) => {
+            let particles = [];
+            // 파티클 밀도를 유지하기 위해 캔버스 크기 증가에 비례하여 파티클 수 증가
+            const numParticles = 200; // 600x400 (240000) -> 800x600 (480000) 이므로 약 2배 증가
+
+            class Particle {
+                constructor() {
+                    this.x = p.random(p.width);
+                    this.y = p.random(p.height);
+                    this.size = p.random(3, 8);
+                    this.color = p.color(240, 245, 255, p.random(180, 255));
+                    this.velocity = p.createVector(p.random(-0.05, 0.05), p.random(0.3, 1.0));
+                    this.lifespan = 255;
+                    this.maxSpeed = 1.0;
+                    this.angle = p.random(p.TWO_PI);
+                }
+
+                update() {
+                    // 좌우 흔들림을 아주 작게 유지
+                    let windSway = p.sin(this.angle + p.frameCount * 0.001) * 0.05;
+                    this.angle += 0.05;
+                    
+                    // 중력/낙하 속도 유지 (느린 하강: 0.05)
+                    let gravity = p.createVector(windSway, 0.05);
+                    this.velocity.add(gravity);
+                    this.velocity.limit(this.maxSpeed);
+                    
+                    this.x += this.velocity.x;
+                    this.y += this.velocity.y;
+
+                    // 수평 경계 처리
+                    if (this.x > p.width) {
+                        this.x = 0;
+                    } else if (this.x < 0) {
+                        this.x = p.width;
+                    }
+                    
+                    // 눈이 화면 아래로 떨어지면 위에서 다시 시작
+                    if (this.y > p.height) {
+                        this.x = p.random(p.width);
+                        this.y = -this.size;
+                        this.velocity = p.createVector(p.random(-0.05, 0.05), p.random(0.3, 1.0));
+                    }
+                    
+                    // Fade out (약한 효과 유지)
+                    this.lifespan -= 0.1;
+                    if (this.lifespan < 150) {
+                        this.lifespan = 255;
+                    }
+                }
+
+                display() {
+                    p.noStroke();
+                    this.color.setAlpha(this.lifespan);
+                    p.fill(this.color);
+                    p.ellipse(this.x, this.y, this.size, this.size);
+                }
+            }
+            
+            p.setup = () => {
+                // 캔버스 크기 확장: 800 x 600
+                p.createCanvas(800, 600); 
+                for (let i = 0; i < numParticles; i++) {
+                    particles.push(new Particle());
+                }
+            };
+
+            p.draw = () => {
+                // 배경색: 겨울의 차분하고 흐린 하늘색
+                p.background(180, 200, 210, 70);
+
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].display();
+                }
+            };
+        };
+
+        // p5 스케치를 특정 DOM 요소에 인스턴스화
+        new p5(sketch, 'p5-container');
+    </script>
+</body>
+</html>
